@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="robots" content="noindex, nofollow">
+<title>CNE Attendance | Security Forces Hospital Dammam</title>
+<link href="https://fonts.googleapis.com/css2?family=Albert+Sans:wght@400;500;600;700&display=swap" rel="stylesheet"><link rel="stylesheet" href="style.css"></head>
+<body>
+<header class="site-header"><div class="header-inner"><img src="assets/ncpd-logo.jpg" alt="NCPD Accredited Provider with Distinction"><div class="brand-title"><h1>Nursing Education and Staff Development</h1><p>Nursing Department</p></div><img src="assets/hospital-logo.jpg" alt="Security Forces Hospital Dammam"></div></header>
+<main class="wrap">
+<ol class="stepper" id="stepper" hidden><li id="st1" class="active"><span class="dot">1</span>Instructions</li><li class="bar"></li><li id="st2"><span class="dot">2</span>Your details</li></ol>
+<section id="s-loading" class="card state"><div class="spinner"></div><p>Loading the attendance form…</p></section>
+<section id="s-error" class="card state warn" hidden><div class="mark">!</div><h2>The form could not load</h2><p>Check your internet connection, then try again.</p><div class="actions" style="justify-content:center"><button class="btn" id="retry">Try again</button></div></section>
+<section id="s-closed" class="card state warn" hidden><div class="mark">⏱</div><h2>Attendance is closed</h2><p>The attendance link is only available for a limited time. If you attended and still need to register, contact the Nursing Education office.</p></section>
+<section id="s-1" class="card" hidden>
+<h2>CNE Attendance Form</h2>
+<p class="lead-quote">“Security Forces Hospital Program Dammam Is Accredited As Provider Of Nursing Continuing Nursing Professional Development By American Nurses Credentialing Center’s Commission On Accreditation”</p>
+<p>This Presentation Accredited By <strong><u>One Contact Hour</u></strong>.</p>
+<p class="notice">“No planners, presenters, or content reviewers have any relevant financial relationship with ineligible companies to disclose”</p>
+<h3>Read the instructions carefully</h3>
+<p style="margin-bottom:4px">To get CE hours and compensatory hours you must:</p>
+<ol class="steps-list"><li><strong>Fill the Attendance form.</strong></li><li><strong>Write your name to match your attendance.</strong></li><li>Be sure that you <strong><u>enter your ID number correctly</u></strong>.</li><li><strong>Attendance link available for a <u>limited time</u>.</strong></li></ol>
+<div class="actions"><button class="btn" id="start">Start attendance</button></div></section>
+<section id="s-2" class="card" hidden>
+<h2>Your details</h2>
+<dl class="lecture"><dt>Topic</dt><dd id="v-topic"></dd><dt>Speaker</dt><dd id="v-speaker"></dd><dt>Date</dt><dd id="v-date"></dd></dl>
+<div class="field"><label for="idno">ID No.</label><input id="idno" type="text" autocomplete="off" inputmode="numeric" maxlength="30"><p class="notice" id="find-msg" hidden style="margin:6px 0 0"></p><p class="err-msg" id="e-id"></p></div>
+<div class="field"><label for="name">Full Name</label><input id="name" type="text" autocomplete="name" maxlength="100"><p class="err-msg" id="e-name"></p></div>
+<fieldset class="field"><legend>Unit</legend><div class="units" id="units"></div><div id="other-wrap" hidden style="margin-top:8px"><label for="other-unit">Write your unit</label><input id="other-unit" type="text" maxlength="60"></div><p class="err-msg" id="e-unit"></p></fieldset>
+<p class="notice">Your location will be requested when you submit, to confirm you are attending at the hospital.</p>
+<div class="banner error" id="submit-error" hidden></div>
+<div class="actions"><button class="btn secondary" id="back">Back</button><button class="btn gold" id="submit">Submit attendance</button></div></section>
+<section id="s-done" class="card state" hidden><div class="mark">✓</div><h2>Thank you. Your attendance was recorded.</h2><p>You can close this page now.</p></section>
+</main>
+<footer class="site-footer">Security Forces Hospital Dammam · Nursing Education and Staff Development</footer>
+<input type="text" id="hp" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0">
+<script src="config.js"></script>
+<script>
+(function(){
+var $=function(i){return document.getElementById(i)},C={},timer,last='';
+function show(id){['loading','error','closed','done','1','2'].forEach(function(s){$('s-'+s).hidden=(s!==id)});$('stepper').hidden=!(id==='1'||id==='2');$('st2').className=id==='2'?'active':'';$('st1').className=id==='1'?'active':'';window.scrollTo(0,0)}
+function en(s){return String(s).replace(/[٠-٩]/g,function(d){return d.charCodeAt(0)-1632}).replace(/[۰-۹]/g,function(d){return d.charCodeAt(0)-1776}).replace(/\s+/g,'')}
+function unitVal(){var r=document.querySelector('input[name=unit]:checked');if(!r)return'';return r.value==='Other'?'Other: '+$('other-unit').value.trim():r.value}
+function setUnit(u){var o=/^Other:\s*(.+)$/.exec(u||''),w=o?'Other':u;[].forEach.call(document.querySelectorAll('input[name=unit]'),function(x){x.checked=(x.value===w)});$('other-wrap').hidden=!o;$('other-unit').value=o?o[1]:''}
+function load(){show('loading');if(!window.API_URL){show('error');return}
+fetch(API_URL+'?action=config').then(function(r){return r.json()}).then(function(c){if(!c.ok)throw 0;C=c;
+$('v-topic').textContent=c.topic;$('v-speaker').textContent=c.speaker;$('v-date').textContent=c.date;
+var b=$('units');b.innerHTML='';c.units.forEach(function(u,i){var l=document.createElement('label'),x=document.createElement('input'),s=document.createElement('span');l.className='opt';x.type='radio';x.name='unit';x.value=u;s.textContent=u;x.onchange=function(){$('other-wrap').hidden=(x.value!=='Other');$('e-unit').textContent=''};l.appendChild(x);l.appendChild(s);b.appendChild(l)});
+show(c.open?'1':'closed')}).catch(function(){show('error')})}
+$('retry').onclick=load;$('start').onclick=function(){show('2')};$('back').onclick=function(){show('1')};
+$('idno').oninput=function(){var v=en(this.value);if(this.value!==v)this.value=v;$('find-msg').hidden=true;$('e-id').textContent='';clearTimeout(timer);
+if(v.length<3||v===last)return;timer=setTimeout(function(){fetch(API_URL+'?action=find&id='+encodeURIComponent(v)).then(function(r){return r.json()}).then(function(r){if($('idno').value!==v)return;last=v;
+if(r.found){$('name').value=r.name;setUnit(r.unit);$('find-msg').textContent='Your data was found. Please check the name and unit, edit if needed, then continue.';$('find-msg').hidden=false}}).catch(function(){})},450)};
+function err(id,m){$(id).textContent=m;return false}
+function valid(){var ok=true;$('e-id').textContent=$('e-name').textContent=$('e-unit').textContent='';
+if(en($('idno').value).length<3)ok=err('e-id','Enter your full ID number.');
+if($('name').value.trim().length<3)ok=err('e-name','Enter your full name.');
+var u=unitVal();if(!u)ok=err('e-unit','Select your unit.');else if(u==='Other: ')ok=err('e-unit','Write your unit in the box.');return ok}
+function geo(){return new Promise(function(res){if(!navigator.geolocation)return res({geo:'refused'});
+navigator.geolocation.getCurrentPosition(function(p){res({lat:p.coords.latitude,lng:p.coords.longitude})},function(){res({geo:'refused'})},{enableHighAccuracy:true,timeout:12000,maximumAge:0})})}
+$('submit').onclick=function(){if(!valid())return;var btn=this,eb=$('submit-error');eb.hidden=true;btn.disabled=true;btn.textContent='Checking location…';
+geo().then(function(g){btn.textContent='Submitting…';var body={action:'submit',id:en($('idno').value),name:$('name').value.trim(),unit:unitVal(),hp:$('hp').value,geo:g.geo||'',lat:g.lat,lng:g.lng};
+return fetch(API_URL,{method:'POST',body:JSON.stringify(body)}).then(function(r){return r.json()})}).then(function(r){
+if(r.ok)return show('done');if(r.code==='closed')return show('closed');eb.textContent=r.error||'Could not submit. Try again.';eb.hidden=false}).catch(function(){eb.textContent='Connection problem. Try again.';eb.hidden=false}).then(function(){btn.disabled=false;btn.textContent='Submit attendance'})};
+load()})();
+</script></body></html>

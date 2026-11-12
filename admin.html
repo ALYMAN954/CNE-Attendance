@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="robots" content="noindex, nofollow">
+<title>CNE Attendance Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=Albert+Sans:wght@400;500;600;700&display=swap" rel="stylesheet"><link rel="stylesheet" href="style.css"></head>
+<body>
+<header class="site-header"><div class="header-inner"><img src="assets/ncpd-logo.jpg" alt=""><div class="brand-title"><h1>CNE Attendance · Admin Dashboard</h1><p>Security Forces Hospital Dammam</p></div><img src="assets/hospital-logo.jpg" alt=""></div></header>
+<main class="wrap">
+<section id="login" class="card"><h2>Admin login</h2><div class="field"><label for="pw">Password</label><input id="pw" type="password" autocomplete="current-password"></div><div class="banner error" id="login-err" hidden></div><div class="actions"><button class="btn" id="go">Sign in</button></div></section>
+<div id="main" hidden>
+<section class="card"><h2>Session <span id="status" style="font-size:.85rem"></span></h2>
+<div class="grid2"><div class="field"><label for="topic">Topic</label><input id="topic" type="text" maxlength="150"></div><div class="field"><label for="speaker">Speaker</label><input id="speaker" type="text" maxlength="100"></div></div>
+<div class="grid2"><div class="field"><label for="date">Date</label><input id="date" type="date"></div><div></div></div>
+<div class="grid2"><div class="field"><label for="from">Form opens at</label><input id="from" type="datetime-local"></div><div class="field"><label for="until">Form closes at</label><input id="until" type="datetime-local"></div></div>
+<label class="opt" style="max-width:420px"><input type="checkbox" id="newsess"><span>Start a new session (creates a new sheet tab)</span></label>
+<div class="banner" id="msg" hidden></div>
+<div class="actions"><button class="btn gold" id="save">Save &amp; open form</button><button class="btn red" id="close">Close now</button></div>
+<p class="notice" style="margin-top:14px">Participant link: <span id="plink"></span></p></section>
+<section class="card"><h2>Hospital location</h2><p id="locinfo">Not set.</p>
+<div class="field" style="max-width:240px"><label for="radius">Allowed radius (meters)</label><input id="radius" type="number" min="50" max="5000" value="300"></div>
+<div class="actions"><button class="btn" id="setloc">Set hospital location from my current location</button></div><p class="notice" style="margin-top:10px">Press this while you are inside the hospital (or the lecture hall) on your phone.</p></section>
+<section class="card"><h2>Attendance</h2><div class="stats"><div class="stat">Total<b id="c-t">0</b></div><div class="stat s-in">Inside<b id="c-in">0</b></div><div class="stat s-out">Outside<b id="c-out">0</b></div><div class="stat s-ref">Refused<b id="c-ref">0</b></div></div>
+<div class="scroll"><table><thead><tr><th>#</th><th>Time</th><th>ID No.</th><th>Name</th><th>Unit</th><th>Location</th><th>m</th><th></th></tr></thead><tbody id="rows"></tbody></table></div>
+<div class="actions"><button class="btn secondary" id="refresh">Refresh</button></div></section>
+</div></main>
+<script src="config.js"></script>
+<script>
+(function(){
+var $=function(i){return document.getElementById(i)},M=['January','February','March','April','May','June','July','August','September','October','November','December'],pw=sessionStorage.getItem('pw')||'',timer,filled=false;
+function call(a,x){var b=Object.assign({action:a,password:pw},x||{});return fetch(API_URL,{method:'POST',body:JSON.stringify(b)}).then(function(r){return r.json()})}
+function loc(ms){var d=new Date(ms-new Date(ms).getTimezoneOffset()*6e4);return d.toISOString().slice(0,16)}
+function say(t,ok){var m=$('msg');m.textContent=t;m.className='banner '+(ok?'ok':'error');m.hidden=false}
+function td(tr,t,cls){var c=document.createElement('td');c.textContent=t;if(cls)c.className=cls;tr.appendChild(c);return c}
+function render(s){var c=s.cfg,n=Date.now();$('login').hidden=true;$('main').hidden=false;
+if(!filled){filled=true;$('topic').value=c.topic;$('speaker').value=c.speaker;$('date').value=c.dateIso||new Date().toISOString().slice(0,10);
+$('from').value=loc(c.from||n);$('until').value=loc(c.until||n+36e5);$('radius').value=c.radius}
+var st=$('status');if(!c.sheet){st.textContent='● No session yet';st.style.color='#777'}else if(n>=c.from&&n<=c.until){st.textContent='● Form OPEN';st.style.color='#166534'}else if(n<c.from){st.textContent='● Scheduled';st.style.color='#8a6d2f'}else{st.textContent='● Form CLOSED';st.style.color='#b42318'}
+$('plink').textContent=location.href.replace(/admin\.html.*$/,'');
+$('locinfo').textContent=c.lat?'Set: '+c.lat.toFixed(5)+', '+c.lng.toFixed(5)+' · radius '+c.radius+' m':'Not set. Location status will show "Not set" until you set it.';
+$('c-t').textContent=s.rows.length;$('c-in').textContent=s.counts.Inside;$('c-out').textContent=s.counts.Outside;$('c-ref').textContent=s.counts.Refused;
+var tb=$('rows');tb.innerHTML='';s.rows.forEach(function(r,i){var tr=document.createElement('tr');tr.className=r.loc==='Inside'?'s-in':r.loc==='Outside'?'s-out':r.loc==='Refused'?'s-ref':'';
+td(tr,i+1);td(tr,r.time);td(tr,r.id);td(tr,r.name);td(tr,r.unit);td(tr,r.loc);td(tr,r.dist);var d=document.createElement('td'),b=document.createElement('button');b.textContent='Delete';b.className='btn secondary';b.style.padding='4px 10px';
+b.onclick=function(){if(confirm('Delete '+r.name+'?'))call('delete',{row:r.row,id:r.id}).then(function(x){x.ok?render(x):say(x.error)})};d.appendChild(b);tr.appendChild(d);tb.appendChild(tr)})}
+function refresh(){call('state').then(function(s){if(!s.ok){$('login-err').textContent=s.error||'Error';$('login-err').hidden=false;$('login').hidden=false;$('main').hidden=true;clearInterval(timer);return}sessionStorage.setItem('pw',pw);render(s)}).catch(function(){})}
+$('go').onclick=function(){pw=$('pw').value;filled=false;refresh();clearInterval(timer);timer=setInterval(refresh,15000)};
+$('refresh').onclick=refresh;
+$('save').onclick=function(){var f=new Date($('from').value).getTime(),u=new Date($('until').value).getTime(),di=$('date').value;
+if(!$('topic').value.trim()||!$('speaker').value.trim()||!di)return say('Fill topic, speaker and date.');if(!(u>f))return say('Closing time must be after opening time.');
+var p=di.split('-'),ds=M[+p[1]-1]+' '+p[2]+' '+p[0];
+call('save',{topic:$('topic').value.trim(),speaker:$('speaker').value.trim(),date:ds,dateIso:di,from:f,until:u,newSession:$('newsess').checked}).then(function(s){if(!s.ok)return say(s.error);$('newsess').checked=false;render(s);say('Saved.',true)})};
+$('close').onclick=function(){call('close').then(function(s){s.ok?(render(s),say('Form closed.',true)):say(s.error)})};
+$('setloc').onclick=function(){var b=this;b.disabled=true;if(!navigator.geolocation){b.disabled=false;return say('Location is not supported on this device.')}
+navigator.geolocation.getCurrentPosition(function(p){call('location',{lat:p.coords.latitude,lng:p.coords.longitude,radius:+$('radius').value||300}).then(function(s){b.disabled=false;s.ok?(render(s),say('Hospital location saved.',true)):say(s.error)})},function(){b.disabled=false;say('Could not get your location. Allow location access and try again.')},{enableHighAccuracy:true,timeout:15000})};
+$('pw').onkeydown=function(e){if(e.key==='Enter')$('go').onclick()};
+if(pw){$('pw').value=pw;$('go').onclick()}
+})();
+</script></body></html>
